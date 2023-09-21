@@ -43,14 +43,13 @@ public class SpringSecurityConfig {
 
 		http.authorizeHttpRequests((authorize) -> authorize
 				.requestMatchers(mvc.pattern("/"), mvc.pattern("/css/**"), mvc.pattern("/js/**"),
-						mvc.pattern("/images/**"), mvc.pattern("/listar**"), mvc.pattern("/locale"),
-						mvc.pattern("/api/clientes/**"))
+						mvc.pattern("/images/**"), mvc.pattern("/listar**"), mvc.pattern("/locale"))
 				.permitAll()
 				.anyRequest().authenticated());
 
-		http.formLogin(form -> form.successHandler(successHandler).loginPage("/login").permitAll());
-		http.logout(logout -> logout.permitAll());
-		http.exceptionHandling(sec -> sec.accessDeniedPage("/error_403"));
+		//http.formLogin(form -> form.successHandler(successHandler).loginPage("/login").permitAll());
+		//http.logout(logout -> logout.permitAll());
+		//http.exceptionHandling(sec -> sec.accessDeniedPage("/error_403"));
 		http.csrf(csrf -> csrf.disable());
 		http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
