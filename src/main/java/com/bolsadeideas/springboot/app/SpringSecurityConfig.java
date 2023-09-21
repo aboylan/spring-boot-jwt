@@ -3,7 +3,9 @@ package com.bolsadeideas.springboot.app;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
+import com.bolsadeideas.springboot.app.auth.filter.JWTAuthenticationFilter;
 import com.bolsadeideas.springboot.app.auth.handler.LoginSuccessHandler;
 import com.bolsadeideas.springboot.app.models.service.JpaUserDetailsService;
 
@@ -19,14 +22,22 @@ import com.bolsadeideas.springboot.app.models.service.JpaUserDetailsService;
 @Configuration
 public class SpringSecurityConfig {
 
-	@Autowired
-	private LoginSuccessHandler successHandler;
+	//@Autowired
+	//private LoginSuccessHandler successHandler;
 
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
 
 	@Autowired
     private JpaUserDetailsService userDetailService;
+
+	@Autowired
+	private AuthenticationConfiguration authenticationConfiguration;
+
+	@Bean
+	AuthenticationManager authenticationManager() throws Exception {
+		return authenticationConfiguration.getAuthenticationManager();
+	}
 
 	@Autowired
 	public void userDetailsService(AuthenticationManagerBuilder build) throws Exception {
@@ -50,6 +61,7 @@ public class SpringSecurityConfig {
 		//http.formLogin(form -> form.successHandler(successHandler).loginPage("/login").permitAll());
 		//http.logout(logout -> logout.permitAll());
 		//http.exceptionHandling(sec -> sec.accessDeniedPage("/error_403"));
+		http.addFilter(new JWTAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()));
 		http.csrf(csrf -> csrf.disable());
 		http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
