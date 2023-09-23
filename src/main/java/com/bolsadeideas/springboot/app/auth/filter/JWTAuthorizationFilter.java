@@ -8,17 +8,15 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
+import com.bolsadeideas.springboot.app.auth.SimpleGrantedAuthoritiesMixin;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,8 +40,9 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 		}
 		boolean validoToken;
 		Claims token = null;
+
 		try {
-			token = Jwts.parserBuilder().setSigningKey(Keys.secretKeyFor(SignatureAlgorithm.HS512)).build()
+			token = Jwts.parserBuilder().setSigningKey(JWTAuthenticationFilter.SECRET_KEY).build()
 					.parseClaimsJws(header.replace("Bearer ", "")).getBody();
 			validoToken = true;
 		} catch (JwtException | IllegalArgumentException e) {
@@ -56,8 +55,9 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 			String username = token.getSubject();
 			Object roles = token.get("authorities");
 
-			Collection<? extends GrantedAuthority> authorities = Arrays
-					.asList(new ObjectMapper().readValue(roles.toString().getBytes(), SimpleGrantedAuthority[].class));
+			Collection<? extends GrantedAuthority> authorities = Arrays.asList(
+					new ObjectMapper().addMixIn(SimpleGrantedAuthority.class, SimpleGrantedAuthoritiesMixin.class)
+							.readValue(roles.toString().getBytes(), SimpleGrantedAuthority[].class));
 			authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
 		}
 
