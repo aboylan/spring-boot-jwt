@@ -1,9 +1,18 @@
 package com.bolsadeideas.springboot.app.auth.filter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -40,7 +49,20 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 		} catch (JwtException | IllegalArgumentException e) {
 			validoToken = false;
 		}
-		
+
+		UsernamePasswordAuthenticationToken authentication = null;
+
+		if (validoToken) {
+			String username = token.getSubject();
+			Object roles = token.get("authorities");
+
+			Collection<? extends GrantedAuthority> authorities = Arrays
+					.asList(new ObjectMapper().readValue(roles.toString().getBytes(), SimpleGrantedAuthority[].class));
+			authentication = new UsernamePasswordAuthenticationToken(username, null, authorities);
+		}
+
+		SecurityContextHolder.getContext().setAuthentication(authentication);
+		chain.doFilter(request, response);
 	}
 
 	private boolean requiresAuthentication(String header) {
