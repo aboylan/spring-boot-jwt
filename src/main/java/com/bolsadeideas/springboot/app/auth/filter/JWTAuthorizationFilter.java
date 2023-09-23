@@ -5,6 +5,11 @@ import java.io.IOException;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +31,16 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
 			chain.doFilter(request, response);
 			return;
 		}
+		boolean validoToken;
+		Claims token = null;
+		try {
+			token = Jwts.parserBuilder().setSigningKey(Keys.secretKeyFor(SignatureAlgorithm.HS512)).build()
+					.parseClaimsJws(header.replace("Bearer ", "")).getBody();
+			validoToken = true;
+		} catch (JwtException | IllegalArgumentException e) {
+			validoToken = false;
+		}
+		
 	}
 
 	private boolean requiresAuthentication(String header) {
