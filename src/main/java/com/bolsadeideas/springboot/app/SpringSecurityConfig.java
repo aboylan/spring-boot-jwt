@@ -17,6 +17,7 @@ import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 import com.bolsadeideas.springboot.app.auth.filter.JWTAuthenticationFilter;
 import com.bolsadeideas.springboot.app.auth.filter.JWTAuthorizationFilter;
 import com.bolsadeideas.springboot.app.auth.handler.LoginSuccessHandler;
+import com.bolsadeideas.springboot.app.auth.service.JWTService;
 import com.bolsadeideas.springboot.app.models.service.JpaUserDetailsService;
 
 @EnableMethodSecurity(securedEnabled = true, prePostEnabled = true)
@@ -35,6 +36,9 @@ public class SpringSecurityConfig {
 	@Autowired
 	private AuthenticationConfiguration authenticationConfiguration;
 
+	@Autowired
+	private JWTService jwtService;
+	
 	@Bean
 	AuthenticationManager authenticationManager() throws Exception {
 		return authenticationConfiguration.getAuthenticationManager();
@@ -62,8 +66,8 @@ public class SpringSecurityConfig {
 		//http.formLogin(form -> form.successHandler(successHandler).loginPage("/login").permitAll());
 		//http.logout(logout -> logout.permitAll());
 		//http.exceptionHandling(sec -> sec.accessDeniedPage("/error_403"));
-		http.addFilter(new JWTAuthenticationFilter(authenticationConfiguration.getAuthenticationManager()));
-		http.addFilter(new JWTAuthorizationFilter(authenticationConfiguration.getAuthenticationManager()));
+		http.addFilter(new JWTAuthenticationFilter(authenticationManager(), jwtService));
+		http.addFilter(new JWTAuthorizationFilter(authenticationManager(), jwtService));
 		http.csrf(csrf -> csrf.disable());
 		http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
