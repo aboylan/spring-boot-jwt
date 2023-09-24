@@ -24,7 +24,13 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JWTServiceImpl implements JWTService {
 
-	public static final Key SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+	public static final Key SECRET = Keys.secretKeyFor(SignatureAlgorithm.HS512);
+
+	public static final long EXPIRATION_DATE = 14000000L;
+
+	public static final String TOKEN_PREFIX = "Bearer ";
+	
+	public static final String HEADER_STRING = "Authorization";
 
 	@Override
 	public String create(Authentication auth) throws IOException {
@@ -36,8 +42,8 @@ public class JWTServiceImpl implements JWTService {
 		Claims claims = Jwts.claims();
 		claims.put("authorities", new ObjectMapper().writeValueAsString(roles));
 
-		String token = Jwts.builder().setClaims(claims).setSubject(username).signWith(SECRET_KEY)
-				.setIssuedAt(new Date()).setExpiration(new Date(System.currentTimeMillis() + 14000000L)).compact();
+		String token = Jwts.builder().setClaims(claims).setSubject(username).signWith(SECRET).setIssuedAt(new Date())
+				.setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_DATE)).compact();
 
 		return token;
 	}
@@ -54,7 +60,7 @@ public class JWTServiceImpl implements JWTService {
 
 	@Override
 	public Claims getClaims(String token) {
-		return Jwts.parserBuilder().setSigningKey(SECRET_KEY).build().parseClaimsJws(resolve(token)).getBody();
+		return Jwts.parserBuilder().setSigningKey(SECRET).build().parseClaimsJws(resolve(token)).getBody();
 	}
 
 	@Override
@@ -72,8 +78,8 @@ public class JWTServiceImpl implements JWTService {
 
 	@Override
 	public String resolve(String token) {
-		if (token != null && token.startsWith("Bearer ")) {
-			return token.replace("Bearer ", "");
+		if (token != null && token.startsWith(TOKEN_PREFIX)) {
+			return token.replace(TOKEN_PREFIX, "");
 		}
 		return null;
 	}
